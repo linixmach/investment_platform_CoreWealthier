@@ -133,7 +133,7 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-CSRF_TRUSTED_ORIGINS = ['corewealthierinvestment.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://corewealthinvestment.up.railway.app']
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
