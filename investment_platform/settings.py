@@ -133,9 +133,13 @@ STATICFILES_DIRS = [
 ]
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
+CSRF_TRUSTED_ORIGINS = ['corewealthierinvestment.up.railway.app']
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 if "RAILWAY_ENVIRONMENT_NAME" in os.environ:
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+CSRF_COOKIE_SECURE = True  # Only if you're using HTTPS in production
+SESSION_COOKIE_SECURE = True
