@@ -1,0 +1,83 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Processing</title>
+  <style>
+    /* Basic Reset & Font */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f4f6f8;
+      color: #3c4858;
+    }
+    /* Responsive Container */
+    .container {
+      width: 100%;
+      max-width: 800px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    /* Header Section */
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 1.5rem;
+      color: #2f55d4;
+      margin-bottom: 10px;
+    }
+    .header p {
+      font-size: 1rem;
+      color: #5a6d90;
+    }
+    /* Message Section */
+    .message {
+      text-align: center;
+      font-size: 1.2rem;
+      margin: 30px 0;
+    }
+    /* Back Arrow */
+    .back-arrow {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #2f55d4;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .back-arrow:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>Transaction Processing</h1>
+      <p>Your transaction is being processed.</p>
+    </div>
+    <!-- Message -->
+    <div class="message">
+      Please wait while we complete your transaction.
+    </div>
+    <!-- Back Arrow -->
+    <div style="text-align: center;">
+      <a href="{% url 'dashboard' %}" class="back-arrow">&larr; Back to Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>
+{% endblock %}

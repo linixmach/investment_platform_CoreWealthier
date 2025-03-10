@@ -1,0 +1,455 @@
+{% block content %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard</title>
+  <!-- Load Chart.js from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Basic Reset & Font */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: #f4f6f8;
+    }
+
+    /* Fixed Topbar with default background */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background-color: #ecf0f1; /* Default color */
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid #ddd;
+      z-index: 1000;
+    }
+    .toggle-btn {
+      font-size: 1.2rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #000;
+      margin-right: 20px;
+    }
+
+    .text-center.mb-4 img {
+  height: 100px !important; /* Adjust the value as needed */
+}
+
+
+    /* Dashboard header text now in sidebar color */
+    .dashboard-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #3498db;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 250px;
+      height: calc(100vh - 60px);
+      background-color: #3498db;
+      color: #fff;
+      position: fixed;
+      top: 60px;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 30px;
+      transition: width 0.3s;
+      overflow: hidden;
+    }
+    .sidebar.collapsed {
+      width: 60px;
+    }
+    .profile-img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background-color: #fff;
+      margin-bottom: 15px;
+      background-image: url('https://via.placeholder.com/80');
+      background-position: center;
+      background-size: cover;
+      transition: 0.3s;
+    }
+    .sidebar.collapsed .profile-img {
+      width: 40px;
+      height: 40px;
+    }
+    .profile-name {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      transition: 0.3s;
+    }
+    .sidebar.collapsed .profile-name {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .sidebar-nav {
+      width: 100%;
+      list-style: none;
+    }
+    .sidebar-nav li {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    .sidebar-nav a {
+      display: block;
+      width: 100%;
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 20px;
+      transition: background 0.3s ease;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sidebar-nav a:hover {
+      background-color: #2e86c1;
+    }
+    .sidebar.collapsed a {
+      padding: 12px;
+      text-align: center;
+    }
+    .sidebar.collapsed .sidebar-nav a span {
+      display: none;
+    }
+
+    /* Main Content */
+    .main-content {
+      margin-top: 60px;
+      margin-left: 250px;
+      padding: 20px 30px;
+      transition: margin-left 0.3s;
+    }
+    .sidebar.collapsed ~ .main-content {
+      margin-left: 60px;
+    }
+
+    /* Responsive Container */
+    .responsive-container {
+      width: 380px;
+      max-width: 90%;
+      margin: 30px auto;
+      background: #fff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      min-height: 600px;
+    }
+    @media (min-width: 768px) {
+      .responsive-container {
+        width: 600px;
+      }
+    }
+    @media (min-width: 1024px) {
+      .responsive-container {
+        width: 800px;
+      }
+    }
+
+    /* Stats Cards */
+    .stats-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin: 20px 0;
+    }
+    .card {
+      background-color: #fff;
+      flex: 1;
+      min-width: 180px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      color: #7f8c8d;
+      margin-bottom: 5px;
+    }
+    .card-value {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    /* Charts Section */
+    .charts-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .chart-card {
+      background-color: #fff;
+      flex: 1;
+      min-width: 280px;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .chart-title {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    canvas {
+      max-width: 100%;
+      margin: 0 auto;
+      display: block;
+      height: 250px !important;
+    }
+
+    /* Table for Active Investments */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    table thead {
+      background-color: #f8f9fa;
+    }
+    table th, table td {
+      text-align: left;
+      padding: 12px;
+      border: 1px solid #dee2e6;
+    }
+    table th {
+      color: #2c3e50;
+      font-weight: 600;
+    }
+
+    /* Plans Section: Cards */
+    .plans-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .plan-card {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 20px;
+      min-width: 200px;
+      flex: 1;
+    }
+    .plan-card-title {
+      display: inline-block;
+      background: #3498db22;
+      color: #2c3e50;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+    }
+    .plan-card-rate {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 5px;
+    }
+    .plan-card-duration {
+      font-size: 0.85rem;
+      color: #7f8c8d;
+      margin-bottom: 10px;
+    }
+    .plan-card-details {
+      list-style: none;
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+      color: #7f8c8d;
+      font-size: 0.9rem;
+    }
+    .plan-card-details li {
+      margin-bottom: 5px;
+    }
+    .plan-buy-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 15px;
+      background-color: #3498db;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      transition: background 0.3s ease;
+    }
+    .plan-buy-btn:hover {
+      background-color: #2980b9;
+    }
+
+    /* Confirmation / Plan Selection Section Header */
+    .chart-card h2 {
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .profile-img-container {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.profile-img {
+  width: 150px;     /* Adjust size as needed */
+  height: 150px;    /* Adjust size as needed */
+  border-radius: 50%;
+  object-fit: cover; /* Ensures the image fills the container nicely */
+}
+
+
+  </style>
+</head>
+<body>
+  <!-- Fixed Topbar -->
+  <div class="topbar">
+    <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+    <div class="dashboard-header">CoreWealthier Investment</div>
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <img class="profile-img"src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150"  alt="Avatar">
+
+  <div class="profile-name">{{ user.username }}</div>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+    <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
+    <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
+    <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+  </ul>
+</div>
+
+
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <!-- TOP STAT CARDS -->
+    <div class="stats-cards">
+      <div class="card">
+        <div class="card-title">Wallet Balance</div>
+        <div class="card-value">
+          {% if wallet.balance %}
+            ${{ wallet.balance }}
+          {% else %}
+            $0.00
+          {% endif %}
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Active Investments</div>
+        <div class="card-value">{{ active_investments.count }}</div>
+      </div>
+    </div>
+
+    <!-- CHARTS SECTION: Dollars & Pounds Bar Chart -->
+    <div class="chart-card">
+      <div class="chart-title">Dollars &amp; Pounds</div>
+      <canvas id="barChart"></canvas>
+    </div>
+
+    <!-- ACTIVE INVESTMENTS TABLE -->
+    <div class="chart-card">
+      <div class="chart-title">Your Active Investments</div>
+      {% if active_investments %}
+        <table>
+          <thead>
+            <tr>
+              <th>Plan Name</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for active in active_investments %}
+            <tr>
+              <td>{{ active.plan.name }}</td>
+              <td>Active</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No active investments at the moment.</p>
+      {% endif %}
+    </div>
+
+    <!-- AVAILABLE INVESTMENT PLANS -->
+    <div class="chart-card">
+      <div class="chart-title">Available Investment Plans</div>
+      {% if investment_plans %}
+        <div class="plans-row">
+          {% for plan in investment_plans %}
+          <div class="plan-card">
+            <span class="plan-card-title">{{ plan.name }}</span>
+            <div class="plan-card-rate">{{ plan.expected_returns }}%</div>
+            <div class="plan-card-duration">{{ plan.duration }} days</div>
+            <ul class="plan-card-details">
+              <li>Amount: ${{ plan.amount }}</li>
+              <li>{{ plan.description }}</li>
+            </ul>
+            <a href="{% url 'purchase_plan' %}?plan_id={{ plan.id }}" class="plan-buy-btn">Buy Now</a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p>No available investment plans at the moment.</p>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <script>
+    // Toggle Sidebar Collapse
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('collapsed');
+    }
+
+    // Dollars & Pounds Bar Chart (using Chart.js)
+    const ctx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May'], // sample labels
+        datasets: [
+          {
+            label: 'Dollars',
+            data: [120, 150, 90, 180, 110], // sample data for dollars
+            backgroundColor: 'rgba(52, 152, 219, 0.8)'
+          },
+          {
+            label: 'Pounds',
+            data: [80, 100, 60, 120, 85], // sample data for pounds
+            backgroundColor: 'rgba(46, 204, 113, 0.8)'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: { beginAtZero: true }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+{% endblock %}

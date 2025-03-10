@@ -1,0 +1,77 @@
+{% load static %}
+
+{% block content %}
+    <div class="topbar">
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+        <div class="dashboard-header">CoreWealthier Investment</div>
+    </div>
+
+  <!-- Sidebar -->
+ <div class="sidebar" id="sidebar">
+    <img class="profile-img"src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150"  alt="Avatar">
+
+  <div class="profile-name">{{ user.username }}</div>
+  <ul class="sidebar-nav">
+    <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+    <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
+    <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
+    <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+  </ul>
+</div>
+
+<!-- Wallet Section -->
+<div>
+    <h3>Wallet Balance: ${{ wallet.balance }}</h3>
+    <h4>Transaction History</h4>
+    <ul>
+        {% for transaction in transactions %}
+            <li>{{ transaction.timestamp }} - {{ transaction.transaction_type|title }}: ${{ transaction.amount }}</li>
+        {% empty %}
+            <li>No transactions yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+class InvestmentPurchase(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    plan = models.ForeignKey(InvestmentPlan, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    purchase_date = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+
+    def approve(self):
+        """Approve investment and move it to ActiveInvestment."""
+        self.status = "Approved"
+        self.save()
+        ActiveInvestment.objects.create(user=self.user, plan=self.plan)
+
+    def reject(self):
+        """Reject investment."""
+        self.status = "Rejected"
+        self.save()
+
+    def __str__(self):
+        return f"{self.user.username} - {self.plan.name} ({self.status})"
+
+
+
+
+
+@admin.register(InvestmentPurchase)
+class InvestmentPurchaseAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan', 'status', 'purchase_date', 'approved_at')
+    list_filter = ('status',)
+    actions = ["approve_selected", "reject_selected"]
+
+    def approve_selected(self, request, queryset):
+        """Approve selected investments and move them to ActiveInvestment."""
+        for purchase in queryset:
+            if purchase.status == "pending":  # Ensure it’s not already approved
+                purchase.approve()
+        self.message_user(request, "Selected investments have been approved.")

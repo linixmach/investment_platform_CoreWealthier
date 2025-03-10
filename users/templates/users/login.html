@@ -1,0 +1,91 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Core Wealthier Investment</title>
+    <link rel="stylesheet" href="{% static 'users/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+
+    <style>
+        body { font-family: 'Nunito', sans-serif; }
+        .login-container { max-width: 400px; width: 100%; background: #fff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); border: 1px solid #e9ecef; }
+        .form-group label { font-weight: 600; color: #333; }
+        .btn-primary { background: #007bff; border: none; padding: 12px; font-size: 16px; border-radius: 5px; }
+        .btn-primary:hover { background: #0056b3; }
+        .text-muted a { font-weight: bold; color: #007bff; }
+        .text-muted a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center" style="height: 100vh;">
+    <div class="login-container">
+        <div class="text-center mb-4">
+            <a href="{% url 'home' %}">
+                <img src="{% static 'users/images/logo.png' %}" height="200" alt="Core Wealthier Investment">
+            </a>
+        </div>
+
+        <h3 class="text-center text-primary font-weight-bold">Login to Your Account</h3>
+        <p class="text-center text-muted">Access your investment dashboard</p>
+
+        <form method="post">
+        {% csrf_token %}
+
+        {# Display non-field errors if any #}
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">
+            {% for error in form.non_field_errors %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="form-group">
+          {{ form.username.label_tag }}
+          {{ form.username }}
+          {% for error in form.username.errors %}
+            <small class="text-danger">{{ error }}</small>
+          {% endfor %}
+        </div>
+
+        <div class="form-group">
+          {{ form.password.label_tag }}
+          {{ form.password }}
+          {% for error in form.password.errors %}
+            <small class="text-danger">{{ error }}</small>
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block mt-3">Login</button>
+      </form>
+
+        <p class="text-center mt-3 text-muted">Don't have an account? <a href="{% url 'register' %}">Sign Up</a></p>
+    </div>
+
+    <script src="{% static 'users/js/jquery-3.5.1.min.js' %}"></script>
+    <script src="{% static 'users/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        document.getElementById("login-form").addEventListener("submit", function(event) {
+            event.preventDefault();
+            let formData = new FormData(this);
+            fetch("{% url 'login' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert("Login failed: " + data.message);
+                }
+            })
+            .catch(error => console.error("Error logging in:", error));
+        });
+    </script>
+</body>
+</html>
