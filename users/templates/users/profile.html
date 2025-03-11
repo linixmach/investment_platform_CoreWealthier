@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
   {% load static %}
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Profile Update</title>
   <style>
     /* Basic Reset & Font */
@@ -47,24 +47,24 @@
       color: #3498db;
     }
 
-    /* Sidebar */
+    /* Sidebar (Off-canvas overlay) */
     .sidebar {
+      position: fixed;
+      top: 60px;
+      left: -250px;  /* Hidden by default */
       width: 250px;
       height: calc(100vh - 60px);
       background-color: #3498db;
       color: #fff;
-      position: fixed;
-      top: 60px;
-      left: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 30px;
-      transition: width 0.3s;
-      overflow: hidden;
+      transition: left 0.3s ease;
+      z-index: 1100;
     }
-    .sidebar.collapsed {
-      width: 60px;
+    .sidebar.open {
+      left: 0; /* Slide in when toggled */
     }
     .profile-img {
       width: 80px;
@@ -72,28 +72,22 @@
       border-radius: 50%;
       background-color: #fff;
       margin-bottom: 15px;
-      background-image: url('{% if request.user.userprofile.profile_picture %}{{ request.user.userprofile.profile_picture.url }}{% else %}{% static "img/default.png" %}{% endif %}');
+      /* Always use UI Avatars for profile picture */
+      background-image: url('https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150');
       background-position: center;
       background-size: cover;
       transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-img {
-      width: 40px;
-      height: 40px;
     }
     .profile-name {
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 20px;
-      transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-name {
-      opacity: 0;
-      pointer-events: none;
+      text-align: center;
     }
     .sidebar-nav {
       width: 100%;
       list-style: none;
+      padding: 0;
     }
     .sidebar-nav li {
       width: 100%;
@@ -109,33 +103,23 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: center;
     }
     .sidebar-nav a:hover {
       background-color: #2e86c1;
     }
-    .sidebar.collapsed a {
-      padding: 12px;
-      text-align: center;
-    }
-    .sidebar.collapsed .sidebar-nav a span {
-      display: none;
-    }
 
-    /* Main Content */
+    /* Main Content occupies full width */
     .main-content {
       margin-top: 60px;
-      margin-left: 250px;
       padding: 20px 30px;
-      transition: margin-left 0.3s;
-    }
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 60px;
+      width: 100%;
     }
 
-    /* Phone-like container */
+    /* Responsive Container for Profile Update */
     .phone-container {
-      width: 380px;
-      max-width: 90%;
+      width: 100%;
+      max-width: 800px;
       margin: 30px auto;
       background: #fff;
       border-radius: 20px;
@@ -144,7 +128,7 @@
     }
     @media (min-width: 768px) {
       .phone-container {
-        width: 600px;
+        width: 90%;
       }
     }
     @media (min-width: 1024px) {
@@ -218,26 +202,25 @@
   </style>
 </head>
 <body>
-  <!-- Topbar -->
+  <!-- TOPBAR -->
   <div class="topbar">
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <div class="dashboard-header">CoreWealthier Investment</div>
   </div>
 
-  <!-- Sidebar -->
- <div class="sidebar" id="sidebar">
-    <img class="profile-img"src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150"  alt="Avatar">
+  <!-- SIDEBAR (Off-canvas overlay) -->
+  <div class="sidebar" id="sidebar">
+    <img class="profile-img" src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150" alt="Avatar">
+    <div class="profile-name">{{ user.username }}</div>
+    <ul class="sidebar-nav">
+      <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+      <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
+      <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
+      <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+    </ul>
+  </div>
 
-  <div class="profile-name">{{ user.username }}</div>
-  <ul class="sidebar-nav">
-    <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
-    <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
-    <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
-    <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
-  </ul>
-</div>
-
-  <!-- Main Content -->
+  <!-- MAIN CONTENT -->
   <div class="main-content" id="mainContent">
     <div class="phone-container">
       <!-- Header Section -->
@@ -269,8 +252,9 @@
   </div>
 
   <script>
+    // Toggle the off-canvas sidebar by toggling the "open" class
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('collapsed');
+      document.getElementById('sidebar').classList.toggle('open');
     }
   </script>
 </body>

@@ -26,7 +26,7 @@
       left: 0;
       width: 100%;
       height: 60px;
-      background-color: #ecf0f1; /* Topbar default color */
+      background-color: #ecf0f1;
       display: flex;
       align-items: center;
       padding: 0 20px;
@@ -39,32 +39,32 @@
       border: none;
       cursor: pointer;
       margin-right: 20px;
-      color: #000; /* Hamburger color */
+      color: #000;
     }
     .dashboard-header {
       font-size: 1.5rem;
       font-weight: 600;
-      color: #3498db; /* CoreWealthier text in same color as sidebar */
+      color: #3498db;
     }
 
-    /* Sidebar */
+    /* Sidebar - Off-Canvas Overlay */
     .sidebar {
-      width: 250px;
-      height: calc(100vh - 60px);
-      background-color: #3498db; /* same as the buy now / brand color */
-      color: #fff;
       position: fixed;
       top: 60px;
-      left: 0;
+      left: -250px;  /* Hidden by default */
+      width: 250px;
+      height: calc(100vh - 60px);
+      background-color: #3498db;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 30px;
-      transition: width 0.3s;
-      overflow: hidden;
+      transition: left 0.3s ease;
+      z-index: 1100;
     }
-    .sidebar.collapsed {
-      width: 60px;
+    .sidebar.open {
+      left: 0; /* Slide in */
     }
     .profile-img {
       width: 80px;
@@ -72,28 +72,20 @@
       border-radius: 50%;
       background-color: #fff;
       margin-bottom: 15px;
-      background-image: url('https://via.placeholder.com/80');
+      background-image: url('https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150');
       background-position: center;
       background-size: cover;
       transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-img {
-      width: 40px;
-      height: 40px;
     }
     .profile-name {
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 20px;
-      transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-name {
-      opacity: 0;
-      pointer-events: none;
     }
     .sidebar-nav {
       width: 100%;
       list-style: none;
+      padding: 0;
     }
     .sidebar-nav li {
       width: 100%;
@@ -109,52 +101,35 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: center;
     }
     .sidebar-nav a:hover {
       background-color: #2e86c1;
     }
-    .sidebar.collapsed a {
-      padding: 12px;
-      text-align: center;
-    }
-    .sidebar.collapsed .sidebar-nav a span {
-      display: none;
-    }
 
-    /* Main Content */
+    /* Main Content (full width) */
     .main-content {
-      margin-top: 60px; /* space for topbar */
-      margin-left: 250px; /* space for sidebar */
+      margin-top: 60px;
       padding: 20px 30px;
-      transition: margin-left 0.3s;
-    }
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 60px;
     }
 
     /* Phone-like container for the withdrawal content */
     .phone-container {
-      width: 380px;
-      max-width: 90%;
+      width: 100%;
+      max-width: 800px;
       margin: 30px auto;
       background: #fff;
       border-radius: 20px;
       padding: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-      min-height: 600px;
     }
     @media (min-width: 768px) {
       .phone-container {
-        width: 600px;
-      }
-    }
-    @media (min-width: 1024px) {
-      .phone-container {
-        width: 800px;
+        width: 90%;
       }
     }
 
-    /* Header Section inside phone container */
+    /* Header Section inside container */
     .header-section {
       text-align: center;
       margin-bottom: 20px;
@@ -259,18 +234,17 @@
     <div class="dashboard-header">CoreWealthier Investment</div>
   </div>
 
-  <!-- SIDEBAR -->
- <div class="sidebar" id="sidebar">
-    <img class="profile-img"src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150"  alt="Avatar">
-
-  <div class="profile-name">{{ user.username }}</div>
-  <ul class="sidebar-nav">
-    <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
-    <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
-    <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
-    <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
-  </ul>
-</div>
+  <!-- SIDEBAR (Off-canvas, overlay) -->
+  <div class="sidebar" id="sidebar">
+    <img class="profile-img" src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150" alt="Avatar">
+    <div class="profile-name">{{ user.username }}</div>
+    <ul class="sidebar-nav">
+      <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+      <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
+      <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
+      <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+    </ul>
+  </div>
 
   <!-- MAIN CONTENT -->
   <div class="main-content" id="mainContent">
@@ -285,25 +259,20 @@
       <div class="withdraw-section">
         <h2>Withdrawal Request</h2>
         <p>Your Current Balance: <strong>${{ wallet.balance }}</strong></p>
-
         <form method="post">
           {% csrf_token %}
-
           <div class="form-field">
             <label for="id_crypto_type">Select Cryptocurrency:</label>
             {{ form.crypto_type }}
           </div>
-
           <div class="form-field">
             <label for="id_withdrawal_address">Withdrawal Wallet Address:</label>
             {{ form.withdrawal_address }}
           </div>
-
           <div class="form-field">
             <label for="id_amount">Amount to Withdraw:</label>
             {{ form.amount }}
           </div>
-
           <button type="submit" class="submit-btn">Submit Withdrawal Request</button>
         </form>
       </div>
@@ -340,10 +309,8 @@
   </div>
 
   <script>
-    // Toggle Sidebar
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
+      document.getElementById('sidebar').classList.toggle('open');
     }
   </script>
 </body>

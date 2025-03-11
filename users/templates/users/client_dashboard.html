@@ -3,8 +3,8 @@
 <html lang="en">
 <head>
   {% load static %}
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
   <!-- Load Chart.js from CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -19,15 +19,14 @@
     body {
       background-color: #f4f6f8;
     }
-
-    /* Fixed Topbar with default background */
+    /* Fixed Topbar */
     .topbar {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 60px;
-      background-color: #ecf0f1; /* Default color */
+      background-color: #ecf0f1;
       display: flex;
       align-items: center;
       padding: 0 20px;
@@ -42,37 +41,29 @@
       color: #000;
       margin-right: 20px;
     }
-
-    .text-center.mb-4 img {
-  height: 100px !important; /* Adjust the value as needed */
-}
-
-
-    /* Dashboard header text now in sidebar color */
     .dashboard-header {
       font-size: 1.5rem;
       font-weight: 600;
       color: #3498db;
     }
-
-    /* Sidebar */
+    /* Sidebar (Off-canvas Overlay) */
     .sidebar {
+      position: fixed;
+      top: 60px;
+      left: -250px; /* Hidden off-screen by default */
       width: 250px;
       height: calc(100vh - 60px);
       background-color: #3498db;
       color: #fff;
-      position: fixed;
-      top: 60px;
-      left: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       padding-top: 30px;
-      transition: width 0.3s;
-      overflow: hidden;
+      transition: left 0.3s ease;
+      z-index: 1100;
     }
-    .sidebar.collapsed {
-      width: 60px;
+    .sidebar.open {
+      left: 0; /* Slide in when open */
     }
     .profile-img {
       width: 80px;
@@ -80,28 +71,21 @@
       border-radius: 50%;
       background-color: #fff;
       margin-bottom: 15px;
-      background-image: url('https://via.placeholder.com/80');
+      background-image: url('https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150');
       background-position: center;
       background-size: cover;
       transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-img {
-      width: 40px;
-      height: 40px;
     }
     .profile-name {
       font-size: 1.1rem;
       font-weight: 600;
       margin-bottom: 20px;
-      transition: 0.3s;
-    }
-    .sidebar.collapsed .profile-name {
-      opacity: 0;
-      pointer-events: none;
+      text-align: center;
     }
     .sidebar-nav {
       width: 100%;
       list-style: none;
+      padding: 0;
     }
     .sidebar-nav li {
       width: 100%;
@@ -117,33 +101,21 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-align: center;
     }
     .sidebar-nav a:hover {
       background-color: #2e86c1;
     }
-    .sidebar.collapsed a {
-      padding: 12px;
-      text-align: center;
-    }
-    .sidebar.collapsed .sidebar-nav a span {
-      display: none;
-    }
-
-    /* Main Content */
+    /* Main Content takes full width */
     .main-content {
       margin-top: 60px;
-      margin-left: 250px;
       padding: 20px 30px;
-      transition: margin-left 0.3s;
+      width: 100%;
     }
-    .sidebar.collapsed ~ .main-content {
-      margin-left: 60px;
-    }
-
-    /* Responsive Container */
+    /* Responsive Container for Dashboard Content */
     .responsive-container {
-      width: 380px;
-      max-width: 90%;
+      width: 100%;
+      max-width: 800px;
       margin: 30px auto;
       background: #fff;
       border-radius: 20px;
@@ -153,7 +125,7 @@
     }
     @media (min-width: 768px) {
       .responsive-container {
-        width: 600px;
+        width: 90%;
       }
     }
     @media (min-width: 1024px) {
@@ -161,7 +133,6 @@
         width: 800px;
       }
     }
-
     /* Stats Cards */
     .stats-cards {
       display: flex;
@@ -188,7 +159,6 @@
       font-weight: 600;
       color: #2c3e50;
     }
-
     /* Charts Section */
     .charts-section {
       display: flex;
@@ -216,7 +186,6 @@
       display: block;
       height: 250px !important;
     }
-
     /* Table for Active Investments */
     table {
       width: 100%;
@@ -235,7 +204,6 @@
       color: #2c3e50;
       font-weight: 600;
     }
-
     /* Plans Section: Cards */
     .plans-row {
       display: flex;
@@ -295,51 +263,42 @@
     .plan-buy-btn:hover {
       background-color: #2980b9;
     }
-
-    /* Confirmation / Plan Selection Section Header */
     .chart-card h2 {
       margin-bottom: 15px;
       text-align: center;
     }
-
     .profile-img-container {
-  text-align: center;
-  margin-bottom: 20px;
-}
-
-.profile-img {
-  width: 150px;     /* Adjust size as needed */
-  height: 150px;    /* Adjust size as needed */
-  border-radius: 50%;
-  object-fit: cover; /* Ensures the image fills the container nicely */
-}
-
-
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .profile-img {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
   </style>
 </head>
 <body>
-  <!-- Fixed Topbar -->
+  <!-- TOPBAR -->
   <div class="topbar">
     <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
     <div class="dashboard-header">CoreWealthier Investment</div>
   </div>
 
-  <!-- Sidebar -->
+  <!-- SIDEBAR (Off-canvas overlay) -->
   <div class="sidebar" id="sidebar">
-    <img class="profile-img"src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150"  alt="Avatar">
+    <img class="profile-img" src="https://ui-avatars.com/api/?name={{ user.username|urlencode }}&background=2f55d4&color=fff&size=150" alt="Avatar">
+    <div class="profile-name">{{ user.username }}</div>
+    <ul class="sidebar-nav">
+      <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
+      <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
+      <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
+      <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
+    </ul>
+  </div>
 
-  <div class="profile-name">{{ user.username }}</div>
-  <ul class="sidebar-nav">
-    <li><a href="{% url 'dashboard' %}"><span>Dashboard</span></a></li>
-    <li><a href="{% url 'profile' %}"><span>Profile</span></a></li>
-    <li><a href="{% url 'withdraw' %}"><span>Transaction</span></a></li>
-    <li><a href="{% url 'logout' %}"><span>Logout</span></a></li>
-  </ul>
-</div>
-
-
-
-  <!-- Main Content -->
+  <!-- MAIN CONTENT -->
   <div class="main-content" id="mainContent">
     <!-- TOP STAT CARDS -->
     <div class="stats-cards">
@@ -412,17 +371,15 @@
         <p>No available investment plans at the moment.</p>
       {% endif %}
     </div>
-
   </div>
 
   <script>
-    // Toggle Sidebar Collapse
+    // Toggle off-canvas sidebar by toggling the "open" class
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      sidebar.classList.toggle('collapsed');
+      document.getElementById('sidebar').classList.toggle('open');
     }
 
-    // Dollars & Pounds Bar Chart (using Chart.js)
+    // Dollars & Pounds Bar Chart using Chart.js
     const ctx = document.getElementById('barChart').getContext('2d');
     const barChart = new Chart(ctx, {
       type: 'bar',
